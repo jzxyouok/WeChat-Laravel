@@ -1,0 +1,18 @@
+{
+    "name": "orz/wechat",
+    "description": "WeChat extension for Laravel",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Orz",
+            "email": "386685456@qq.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Orz\\WeChat\\": "src/"
+        }
+    }
+}
