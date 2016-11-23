@@ -21,7 +21,12 @@ class WeChat
     }
     public function test()
     {
-        dd($this->_config);
+        $pay = new Pay($this->_config);
+        $a = array(
+            'a'=>123,
+            'b'=>234,
+        );
+        $pay->payResult($a);
     }
 
 }

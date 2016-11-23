@@ -1,8 +1,8 @@
-<?php namespace Orz\WeChat;
+<?php namespace Orz\WeChat\Facade;
 
 use Illuminate\Support\Facades\Facade;
 
-class WeChatFacade extends Facade
+class WeChat extends Facade
 {
     /**
      * Get the registered name of the component.
