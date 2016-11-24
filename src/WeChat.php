@@ -1,6 +1,8 @@
 <?php namespace Orz\WeChat;
 
+use Orz\WeChat\Handler\AccessToken;
 use Orz\WeChat\Handler\Exception\WeChatException;
+use Orz\WeChat\Handler\JsSDK;
 use Orz\WeChat\Handler\Pay;
 
 class WeChat
@@ -30,6 +32,29 @@ class WeChat
             $this->_config = $config;
         }
         return $this;
+    }
+
+    /**
+     * 获取access_token
+     * @return string
+     */
+    public function getAccessToken()
+    {
+        $token = new AccessToken($this->_config['web']);
+        return $token->get();
+    }
+
+
+    /**
+     * 获取JSSDK注入所需对象
+     * @param string $url 接口所需的调用页面URL
+     * @param bool|false $debug 是否开启debug模式，默认关闭
+     * @return array
+     */
+    public function getJsSDK($url,$debug = false)
+    {
+        $js = new JsSDK($this->_config['web']);
+        return $js->getJsSDK($url,$debug);
     }
 
     /**

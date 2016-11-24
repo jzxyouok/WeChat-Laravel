@@ -10,6 +10,9 @@ use Orz\WeChat\Tool\CURL;
 
 class AccessToken
 {
+    /**
+     * 文档中的接口地址
+     */
     const ACCESS_TOKEN_URL = 'https://api.weixin.qq.com/cgi-bin/token';
 
     /**
