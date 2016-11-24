@@ -19,7 +19,7 @@ return [
             'app_secret'=>'',
             'mch_id'=>'',
             'mch_secret'=>'',
-            'trade_type'=>'APP',
+            'trade_type'=>'',
             'notify_url'=>'',
         ],
     ]

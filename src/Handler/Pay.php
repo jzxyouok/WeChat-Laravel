@@ -3,11 +3,16 @@
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Orz\WeChat\Handler\Exception\WeChatPayException;
+use Orz\WeChat\Handler\Exception\WeChatException;
+use Orz\WeChat\Handler\Exception\WeChatOfficialException;
 use Orz\WeChat\Tool\CURL;
 use Orz\WeChat\Tool\DataFormat;
 
 
+/**
+ * Class Pay
+ * @package Orz\WeChat\Handler
+ */
 class Pay
 {
 
@@ -30,14 +35,16 @@ class Pay
         $this->_config = $_config;
     }
 
+
     /**
      * 生成 统一下单 订单，并将签名缓存，便于回调验证签名
      * @param string    $body  订单描述
      * @param string    $orderNumber   订单号
      * @param int   $price  价格
      * @param string    $openid 如果是公众号支付则必须有此值
-     * @return mixed|\SimpleXMLElement
-     * @throws WeChatPayException
+     * @return array 微信官方返回数据，已转换成数组
+     * @throws WeChatException  程序本身异常，配置或缓存未开启
+     * @throws WeChatOfficialException  微信官方返回的错误
      */
     public function unifiedOrder($body,$orderNumber,$price,$openid = '')
     {
@@ -59,20 +66,22 @@ class Pay
         }
         $order['sign'] = self::sign($order,$this->_config['mch_secret']);
 
-        //缓存签名，用于之后验证微信回调，过期时间15分钟
-        $expiresAt = Carbon::now()->addMinutes(15);
-        Cache::put($orderNumber,$order['sign'],$expiresAt);
-        if(Cache::has($orderNumber)){
-            $xml = DataFormat::array2xml($order);
-            $curl = new CURL();
-            $result = $curl->post(self::PREPAY_URL,$xml,'xml');
-            if($result['return_code'] == 'FAIL'){
-                throw new WeChatPayException($result['return_msg'],1000);
-            }else{
-                return $result;
-            }
+        $xml = DataFormat::array2xml($order);
+        $curl = new CURL();
+        $result = $curl->post(self::PREPAY_URL,$xml,'xml');
+        if(!is_array($result)){
+            throw new WeChatException('Pay-unifiedOrder method return format error.',2000);
+        }elseif($result['return_code'] == 'FAIL'){
+            throw new WeChatOfficialException($result['return_msg'],5000);
         }else{
-            throw new WeChatPayException('Cache not open,Please set cache.',1000);
+            //缓存签名，用于之后验证微信回调，过期时间15分钟
+            $expiresAt = Carbon::now()->addMinutes(15);
+            Cache::put($orderNumber,$order['sign'],$expiresAt);
+            if(Cache::has($orderNumber)){
+                return $result;
+            }else{
+                throw new WeChatException('Pay-unifiedOrder method cache sign fail.',2001);
+            }
         }
     }
 
