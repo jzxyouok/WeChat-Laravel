@@ -35,7 +35,7 @@ class Pay
      * @param string    $body  订单描述
      * @param string    $orderNumber   订单号
      * @param int   $price  价格
-     * @param string    $openid
+     * @param string    $openid 如果是公众号支付则必须有此值
      * @return mixed|\SimpleXMLElement
      * @throws WeChatPayException
      */
