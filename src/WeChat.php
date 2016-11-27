@@ -44,7 +44,6 @@ class WeChat
         return $token->get();
     }
 
-
     /**
      * 获取JSSDK注入所需对象
      * @param string $url 接口所需的调用页面URL
@@ -65,10 +64,11 @@ class WeChat
      * @return array  微信官方文档返回数据，已转成数组
      * @throws Handler\Exception\WeChatPayException 包含所有官方文档中提示可能出现的错误
      */
-    public function getUnifiedOrderApp($body,$orderNumber,$price)
+    public function getPayApp($body,$orderNumber,$price)
     {
         $pay = new Pay($this->_config['app']);
-        return $pay->unifiedOrder($body,$orderNumber,$price);
+        $unified_order = $pay->unifiedOrder($body,$orderNumber,$price);
+        return $pay->InjectObjectApp($unified_order);
     }
 
     /**
@@ -80,9 +80,10 @@ class WeChat
      * @return array  微信官方文档返回数据，已转成数组
      * @throws Handler\Exception\WeChatPayException 包含所有官方文档中提示可能出现的错误
      */
-    public function getUnifiedOrderWeb($body,$orderNumber,$price,$openid)
+    public function getPayWeb($body,$orderNumber,$price,$openid)
     {
         $pay = new Pay($this->_config['web']);
-        return $pay->unifiedOrder($body,$orderNumber,$price,$openid);
+        $unified_order = $pay->unifiedOrder($body,$orderNumber,$price,$openid);
+        return $pay->InjectObjectWeb($unified_order);
     }
 }

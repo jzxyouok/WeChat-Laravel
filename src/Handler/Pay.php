@@ -35,7 +35,6 @@ class Pay
         $this->_config = $_config;
     }
 
-
     /**
      * 生成 统一下单 订单，并将签名缓存，便于回调验证签名
      * @param string    $body  订单描述
@@ -83,6 +82,43 @@ class Pay
                 throw new WeChatException('Pay-unifiedOrder method cache sign fail.',2001);
             }
         }
+    }
+
+    /**
+     * 支付第二步：APP端调起支付接口所需注入的对象
+     * @param array $unifiedOrder 由预支付订单返回的微信官方数据数组
+     * @return array
+     */
+    public function InjectObjectApp($unifiedOrder)
+    {
+        $data = array(
+            'appid'=>$unifiedOrder['appid'],
+            'partnerid'=>$unifiedOrder['mch_id'],
+            'prepayid'=>$unifiedOrder['prepay_id'],
+            'package'=>'Sign=WXPay',
+            'noncestr'=>$unifiedOrder['nonce_str'],
+            'timestamp'=>time(),
+        );
+        $data['sign'] = self::sign($data,$this->_config['mch_secret']);
+        return $data;
+    }
+
+    /**
+     * 支付第二步：WEB端调起支付接口所需注入的对象
+     * @param array $unifiedOrder 由预支付订单返回的微信官方数据数组
+     * @return array
+     */
+    public function InjectObjectWeb($unifiedOrder)
+    {
+        $data = array(
+            'appId'=>$unifiedOrder['appid'],
+            'signType'=>'MD5',
+            'package'=>'prepay_id='.$unifiedOrder['prepay_id'],
+            'nonceStr'=>$unifiedOrder['nonce_str'],
+            'timeStamp'=>time(),
+        );
+        $data['paySign'] = self::sign($data,$this->_config['mch_secret']);
+        return $data;
     }
 
     /**
