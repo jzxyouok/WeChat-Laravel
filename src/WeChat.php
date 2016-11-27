@@ -68,7 +68,7 @@ class WeChat
     {
         $pay = new Pay($this->_config['app']);
         $unified_order = $pay->unifiedOrder($body,$orderNumber,$price);
-        return $pay->InjectObjectApp($unified_order);
+        return $pay->InjectObjectApp($unified_order,$orderNumber);
     }
 
     /**
@@ -84,6 +84,6 @@ class WeChat
     {
         $pay = new Pay($this->_config['web']);
         $unified_order = $pay->unifiedOrder($body,$orderNumber,$price,$openid);
-        return $pay->InjectObjectWeb($unified_order);
+        return $pay->InjectObjectWeb($unified_order,$orderNumber);
     }
 }

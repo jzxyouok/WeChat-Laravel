@@ -73,23 +73,18 @@ class Pay
         }elseif($result['return_code'] == 'FAIL'){
             throw new WeChatOfficialException($result['return_msg'],5000);
         }else{
-            //缓存签名，用于之后验证微信回调，过期时间15分钟
-            $expiresAt = Carbon::now()->addMinutes(15);
-            Cache::put($orderNumber,$order['sign'],$expiresAt);
-            if(Cache::has($orderNumber)){
-                return $result;
-            }else{
-                throw new WeChatException('Pay-unifiedOrder method cache sign fail.',2001);
-            }
+            return $result;
         }
     }
 
     /**
      * 支付第二步：APP端调起支付接口所需注入的对象
      * @param array $unifiedOrder 由预支付订单返回的微信官方数据数组
+     * @param string $orderNumber 订单号，用做缓存的key
      * @return array
+     * @throws WeChatException 缓存失败错误
      */
-    public function InjectObjectApp($unifiedOrder)
+    public function InjectObjectApp($unifiedOrder,$orderNumber)
     {
         $data = array(
             'appid'=>$unifiedOrder['appid'],
@@ -99,16 +94,23 @@ class Pay
             'noncestr'=>$unifiedOrder['nonce_str'],
             'timestamp'=>time(),
         );
-        $data['sign'] = self::sign($data,$this->_config['mch_secret']);
+        $cache = self::setCache($orderNumber,json_encode($data));
+        if($cache){
+            $data['sign'] = self::sign($data,$this->_config['mch_secret']);
+        }else{
+            throw new WeChatException('Pay class cache error.',2001);
+        }
         return $data;
     }
 
     /**
      * 支付第二步：WEB端调起支付接口所需注入的对象
      * @param array $unifiedOrder 由预支付订单返回的微信官方数据数组
+     * @param string $orderNumber 订单号，用做缓存的key
      * @return array
+     * @throws WeChatException 缓存失败错误
      */
-    public function InjectObjectWeb($unifiedOrder)
+    public function InjectObjectWeb($unifiedOrder,$orderNumber)
     {
         $data = array(
             'appId'=>$unifiedOrder['appid'],
@@ -117,7 +119,12 @@ class Pay
             'nonceStr'=>$unifiedOrder['nonce_str'],
             'timeStamp'=>time(),
         );
-        $data['paySign'] = self::sign($data,$this->_config['mch_secret']);
+        $cache = self::setCache($orderNumber,json_encode($data));
+        if($cache){
+            $data['paySign'] = self::sign($data,$this->_config['mch_secret']);
+        }else{
+            throw new WeChatException('Pay class cache error.',2001);
+        }
         return $data;
     }
 
@@ -128,7 +135,7 @@ class Pay
      * @param string $algo  加密方式
      * @return string
      */
-    protected static function sign($data,$mch_secrest,$algo = 'md5')
+    public static function sign($data,$mch_secrest,$algo = 'md5')
     {
         ksort($data);
         $list = array();
@@ -143,5 +150,22 @@ class Pay
             return strtoupper(md5($str));
         else
             return strtoupper(sha1($str));
+    }
+
+    /**
+     * 缓存方法
+     * @param string $orderNumber 订单号用作缓存的key
+     * @param mixed $data 缓存的数据
+     * @return bool
+     */
+    protected static function setCache($orderNumber,$data)
+    {
+        $expiresAt = Carbon::now()->addMinutes(15);
+        Cache::store('file')->put($orderNumber,$data,$expiresAt);
+        if(Cache::store('file')->has($orderNumber)){
+            return TRUE;
+        }else{
+            return FALSE;
+        }
     }
 }
